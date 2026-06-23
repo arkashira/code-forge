@@ -3,26 +3,42 @@ from dataclasses import dataclass
 from typing import List
 
 @dataclass
-class Dependency:
+class Skill:
     name: str
-    version: str
+    code_snippet: str
+    ci_badge: str
+    documentation_link: str
+    version: str = None  # Added version attribute
 
-@dataclass
-class Lockfile:
-    dependencies: List[Dependency]
+class CodeForge:
+    def __init__(self):
+        self.skills = []
 
-def load_lockfile(path: str) -> Lockfile:
-    with open(path, 'r') as f:
-        data = json.load(f)
-    dependencies = [Dependency(name=dep['name'], version=dep['version']) for dep in data['dependencies']]
-    return Lockfile(dependencies=dependencies)
+    def add_skill(self, skill: Skill):
+        self.skills.append(skill)
 
-def run_unit_tests(lockfile: Lockfile) -> bool:
-    # Simulate running unit tests
-    # For demonstration purposes, assume all tests pass if the lockfile is valid
-    return all(dep.version != '0.0.0' for dep in lockfile.dependencies)
+    def search_skills(self, keyword: str = None, tag: str = None, version: str = None) -> List[Skill]:
+        results = []
+        for skill in self.skills:
+            if (keyword and keyword not in skill.name) or (tag and tag not in skill.name) or (version and version != skill.version):
+                continue
+            results.append(skill)
+            if len(results) >= 20:
+                break
+        return results
 
-def validate_lockfile(lockfile: Lockfile, expected_dependencies: List[Dependency]) -> bool:
-    # Simulate validating the lockfile
-    # For demonstration purposes, assume the lockfile is valid if it contains all expected dependencies
-    return all(any(dep.name == expected_dep.name and dep.version == expected_dep.version for dep in lockfile.dependencies) for expected_dep in expected_dependencies)
+    def insert_code_snippet(self, skill: Skill, cursor_location: int) -> str:
+        indentation = ''
+        lines = skill.code_snippet.split('\n')
+        indented_lines = [indentation + line for line in lines]
+        code_snippet = '\n'.join(indented_lines)
+        return code_snippet
+
+    def get_ci_badge(self, skill: Skill) -> str:
+        return skill.ci_badge
+
+    def get_documentation_link(self, skill: Skill) -> str:
+        return skill.documentation_link
+
+    def handle_api_error(self, error: str) -> None:
+        print(f"Error: {error}")
