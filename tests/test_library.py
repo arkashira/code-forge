@@ -1,32 +1,38 @@
-import pytest
-from library import Library, LibraryMetadata
-import json
-import zipfile
-from io import BytesIO
+from library import Library, LibraryMetrics
 
-def test_library_from_zip():
-    metadata = {'description': 'Test library'}
-    zip_buffer = BytesIO()
-    with zipfile.ZipFile(zip_buffer, 'w') as zip_ref:
-        manifest_data = {'name': 'test-library', 'version': '1.0', 'description': 'Test library'}
-        zip_ref.writestr('manifest.json', json.dumps(manifest_data))
-    library = Library.from_zip(zip_buffer.getvalue(), metadata)
-    assert library.name == 'test-library'
-    assert library.version == '1.0'
-    assert library.metadata == metadata
+def test_library_metrics():
+    library = Library("example", {
+        "unit_test_coverage": "0.8",
+        "dependency_lock_status": "locked",
+        "usage_count": "10"
+    })
+    metrics = library.get_metrics()
+    assert metrics.unit_test_coverage == 0.8
+    assert metrics.dependency_lock_status == "locked"
+    assert metrics.usage_count == 10
 
-def test_library_from_zip_missing_manifest_fields():
-    metadata = {'description': 'Test library'}
-    zip_buffer = BytesIO()
-    with zipfile.ZipFile(zip_buffer, 'w') as zip_ref:
-        manifest_data = {'name': 'test-library'}
-        zip_ref.writestr('manifest.json', json.dumps(manifest_data))
-    with pytest.raises(ValueError):
-        Library.from_zip(zip_buffer.getvalue(), metadata)
+def test_library_metrics_missing():
+    library = Library("example")
+    metrics = library.get_metrics()
+    assert metrics.unit_test_coverage == 0.0
+    assert metrics.dependency_lock_status == "unknown"
+    assert metrics.usage_count == 0
 
-def test_library_to_dict():
-    library = Library('test-library', '1.0', {'description': 'Test library'})
-    library_dict = library.to_dict()
-    assert library_dict['name'] == 'test-library'
-    assert library_dict['version'] == '1.0'
-    assert library_dict['metadata'] == {'description': 'Test library'}
+def test_library_placeholder():
+    library = Library("example")
+    assert library.get_placeholder("unit_test_coverage") == "Missing unit_test_coverage metric"
+
+def test_library_ci_pipeline_link():
+    library = Library("example")
+    assert library.get_ci_pipeline_link() == "https://example.com/example/ci-pipeline"
+
+def test_library_metrics_invalid():
+    library = Library("example", {
+        "unit_test_coverage": "invalid",
+        "dependency_lock_status": "locked",
+        "usage_count": "10"
+    })
+    metrics = library.get_metrics()
+    assert metrics.unit_test_coverage == 0.0
+    assert metrics.dependency_lock_status == "unknown"
+    assert metrics.usage_count == 0

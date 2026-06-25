@@ -3,7 +3,7 @@ requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
 [tool.poetry]
-name = "code-forge"
+name = "library"
 version = "0.1.0"
 description = ""
 

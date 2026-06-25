@@ -1,35 +1,30 @@
-import json
-import zipfile
 from dataclasses import dataclass
 from typing import Dict
-from io import BytesIO
 
 @dataclass
-class LibraryMetadata:
-    name: str
-    version: str
-    description: str
+class LibraryMetrics:
+    unit_test_coverage: float
+    dependency_lock_status: str
+    usage_count: int
 
 class Library:
-    def __init__(self, name: str, version: str, metadata: Dict):
+    def __init__(self, name: str, metrics: Dict[str, str] = None):
         self.name = name
-        self.version = version
-        self.metadata = metadata
+        self.metrics = metrics if metrics else {}
 
-    @classmethod
-    def from_zip(cls, zip_file: bytes, metadata: Dict) -> 'Library':
-        zip_buffer = BytesIO(zip_file)
-        with zipfile.ZipFile(zip_buffer, 'r') as zip_ref:
-            manifest_file = zip_ref.open('manifest.json')
-            manifest_data = json.load(manifest_file)
-            required_fields = ['name', 'version', 'description']
-            if not all(field in manifest_data for field in required_fields):
-                raise ValueError("Manifest is missing required fields")
-            return cls(manifest_data['name'], manifest_data['version'], metadata)
+    def get_metrics(self) -> LibraryMetrics:
+        if not self.metrics:
+            return LibraryMetrics(0.0, "unknown", 0)
+        try:
+            unit_test_coverage = float(self.metrics.get("unit_test_coverage", 0.0))
+            dependency_lock_status = self.metrics.get("dependency_lock_status", "unknown")
+            usage_count = int(self.metrics.get("usage_count", 0))
+            return LibraryMetrics(unit_test_coverage, dependency_lock_status, usage_count)
+        except ValueError:
+            return LibraryMetrics(0.0, "unknown", 0)
 
-    def to_dict(self) -> Dict:
-        return {
-            'name': self.name,
-            'version': self.version,
-            'metadata': self.metadata
-        }
+    def get_placeholder(self, metric_name: str) -> str:
+        return f"Missing {metric_name} metric"
+
+    def get_ci_pipeline_link(self) -> str:
+        return f"https://example.com/{self.name}/ci-pipeline"
